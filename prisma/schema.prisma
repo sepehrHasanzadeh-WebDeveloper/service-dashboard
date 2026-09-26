@@ -44,7 +44,6 @@ model Service {
   logo        String?
   logoName    String?
   tone        String   @default("violet")
-  isFavorite  Boolean  @default(false)
   order       Int      @default(0)
   companyId   String
   categoryId  String

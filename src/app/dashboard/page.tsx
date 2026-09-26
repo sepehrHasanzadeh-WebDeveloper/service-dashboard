@@ -15,7 +15,6 @@ import {
   Database,
   GitBranch,
   GripVertical,
-  Heart,
   KeyRound,
   LayoutGrid,
   LoaderCircle,
@@ -43,7 +42,6 @@ type Service = {
   icon: IconComponent;
   iconUrl?: string | null;
   tone: string;
-  isFavorite: boolean;
   order: number;
   logo?: string | null;
   logoName?: string | null;
@@ -74,7 +72,6 @@ type ApiService = {
   link: string;
   icon?: string | null;
   tone: string;
-  isFavorite: boolean;
   order: number;
   logo?: string | null;
   logoName?: string | null;
@@ -125,7 +122,7 @@ type CategoryContextMenu = {
 };
 
 type ThemeName = "dark" | "light" | "orange" | "slate" | "forest" | "graphite" | "sand";
-type SortOption = "name" | "latest" | "custom" | "favorites";
+type SortOption = "name" | "latest" | "custom";
 
 const themeOptions: Array<{ id: ThemeName; label: string; background: string; accent: string }> = [
   { id: "dark", label: "سرمه‌ای سازمانی", background: "#102238", accent: "#6e91b6" },
@@ -244,7 +241,6 @@ export default function DashboardPage() {
   const [isDeletingCompany, setIsDeletingCompany] = useState(false);
   const [isDeletingCategory, setIsDeletingCategory] = useState(false);
   const [isDeletingService, setIsDeletingService] = useState(false);
-  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   const [editingServiceId, setEditingServiceId] = useState<string | null>(null);
   const [selectedService, setSelectedService] = useState<Service | null>(null);
   const [serviceToDelete, setServiceToDelete] = useState<Service | null>(null);
@@ -304,7 +300,7 @@ export default function DashboardPage() {
   const categoryOptions = [{ id: "all", title: "همه سرویس‌ها", count: serviceCount }, ...displayedCategories.map((category) => ({ id: category.id, title: category.title, count: category.services.length }))];
   const visibleCategories = displayedCategories
     .filter((category) => selectedCategory === "all" || category.id === selectedCategory)
-    .map((category) => ({ ...category, services: sortServices(category.services.filter((service) => (sortOption !== "favorites" || service.isFavorite) && (!normalizedQuery || [service.name ?? "", service.title, service.description, category.title].some((value) => value.toLocaleLowerCase("fa-IR").includes(normalizedQuery)))), sortOption === "favorites" ? "custom" : sortOption) }))
+    .map((category) => ({ ...category, services: sortServices(category.services.filter((service) => !normalizedQuery || [service.name ?? "", service.title, service.description, category.title].some((value) => value.toLocaleLowerCase("fa-IR").includes(normalizedQuery))), sortOption) }))
     .filter((category) => category.services.length > 0);
   const visibleServiceCount = visibleCategories.reduce((count, category) => count + category.services.length, 0);
   const hasActiveFilters = Boolean(normalizedQuery) || selectedCategory !== "all";
@@ -387,31 +383,6 @@ export default function DashboardPage() {
       setSaveError(error instanceof Error ? error.message : "حذف سرویس با خطا مواجه شد.");
     } finally {
       setIsDeletingService(false);
-    }
-  }
-
-  async function toggleFavorite() {
-    if (!selectedService || isTogglingFavorite) return;
-
-    setIsTogglingFavorite(true);
-    setSaveError("");
-
-    try {
-      const response = await fetch(`/api/services/${selectedService.id}/favorite`, {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ isFavorite: !selectedService.isFavorite }),
-      });
-      await readApiPayload(response);
-      const nextCompanies = await loadDashboard(false);
-      const updatedService = nextCompanies
-        .flatMap((company) => company.categories.flatMap((category) => category.services))
-        .find((service) => service.id === selectedService.id);
-      if (updatedService) setSelectedService(updatedService);
-    } catch (error) {
-      setSaveError(error instanceof Error ? error.message : "ذخیره وضعیت علاقه‌مندی با خطا مواجه شد.");
-    } finally {
-      setIsTogglingFavorite(false);
     }
   }
 
@@ -792,12 +763,12 @@ export default function DashboardPage() {
           <section className="service-filters glass-card" aria-label="جست‌وجو و فیلتر سرویس‌ها">
             <div className="filter-toolbar">
               <div className="filter-search-wrap">
-                <label className="filter-search" aria-label="جست‌وجو بین سرویس‌ها"><Search size={17} /><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="جست‌وجو بر اساس نام، عنوان، توضیحات یا دسته‌بندی" type="search" /></label>
+                <label className="filter-search" aria-label="جست‌وجو بین سرویس‌ها"><Search size={16} /><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="جست‌وجوی سرویس‌ها..." type="search" /></label>
                 {searchQuery.trim() && <div className="search-results filter-search-results" role="listbox" aria-label="نتایج جست‌وجو"><div className="search-results-heading">نتایج جست‌وجو <span>{searchResults.length}</span></div>{searchResults.length > 0 ? searchResults.slice(0, 8).map((service) => <button className="search-result" type="button" key={service.id} onClick={() => { setSelectedCategory(service.categoryId); setSearchQuery(""); }}><ServiceIconVisual service={service} className="search-result-icon" size={15} /><span className="search-result-copy"><strong>{service.title}</strong><small>{service.categoryTitle} · {service.description || "بدون توضیحات"}</small></span><ArrowUpLeft size={14} /></button>) : <p className="search-empty">سرویسی با این عبارت پیدا نشد.</p>}</div>}
               </div>
-              <label className="sort-control"><span>مرتب‌سازی</span><select value={sortOption} onChange={(event) => setSortOption(event.target.value as SortOption)}><option value="custom">ترتیب سفارشی</option><option value="name">نام A-Z</option><option value="latest">جدیدترین</option><option value="favorites">سرویس‌های مورد علاقه</option></select></label>
+              <label className="sort-control"><span>مرتب‌سازی</span><select value={sortOption} onChange={(event) => setSortOption(event.target.value as SortOption)}><option value="custom">ترتیب سفارشی</option><option value="name">نام A-Z</option><option value="latest">جدیدترین</option></select></label>
             </div>
-            <div className="category-filter"><span className="category-filter-label">دسته‌بندی</span><div className="category-chips" role="list">{categoryOptions.map((category) => <button className={`category-chip ${selectedCategory === category.id ? "category-chip-active" : ""}`} key={category.id} type="button" onClick={() => { setSelectedCategory(category.id); setSearchQuery(""); }} onContextMenu={(event) => { const sourceCategory = displayedCategories.find((item) => item.id === category.id); if (sourceCategory) handleCategoryContextMenu(event, sourceCategory); }}><span>{category.title}</span><b>{category.count}</b></button>)}</div></div>
+            <div className="category-filter"><div className="category-filter-heading"><span className="category-filter-label">دسته‌بندی‌ها</span><small>{displayedCategories.length} دسته</small></div><div className="category-chips" role="list">{categoryOptions.map((category) => <button className={`category-chip ${selectedCategory === category.id ? "category-chip-active" : ""}`} key={category.id} type="button" onClick={() => { setSelectedCategory(category.id); setSearchQuery(""); }} onContextMenu={(event) => { const sourceCategory = displayedCategories.find((item) => item.id === category.id); if (sourceCategory) handleCategoryContextMenu(event, sourceCategory); }}><span>{category.title}</span><b>{category.count}</b></button>)}</div></div>
             <p className="reorder-hint" aria-live="polite">{canReorder ? "برای تغییر ترتیب، کارت‌ها را داخل هر دسته جابه‌جا کنید." : "برای مرتب‌سازی دستی، جست‌وجو و فیلتر دسته‌بندی را پاک کنید و «ترتیب سفارشی» را انتخاب کنید."}</p>
           </section>
           <div className="section-heading"><div><h2 id="services-title">سرویس‌های {activeCompany.name}</h2><span>{visibleServiceCount === serviceCount ? `${serviceCount} سرویس فعال` : `${visibleServiceCount} از ${serviceCount} سرویس نمایش داده می‌شود`} · {activeCompany.subtitle || "فضای مدیریت سرویس‌های شرکت"}</span></div><button className="section-action" type="button" onClick={openAddServiceModal}>افزودن سرویس <Plus size={15} /></button></div>
@@ -869,7 +840,7 @@ export default function DashboardPage() {
         <div className="service-details-header"><div className="service-details-identity"><ServiceIconVisual service={selectedService} className="service-details-icon" size={22} /><div><span className="modal-eyebrow">اطلاعات سرویس</span><h2 id="service-details-title">{selectedService.title}</h2>{selectedService.name && selectedService.name !== selectedService.title && <p>{selectedService.name}</p>}</div></div><button className="modal-close" type="button" aria-label="بستن اطلاعات سرویس" onClick={closeServiceDetails}>×</button></div>
         {saveError && <div className="form-error" role="alert">{saveError}</div>}
         <div className="service-details-content"><div className="service-detail-item"><span>دسته‌بندی</span><strong>{selectedService.categoryTitle}</strong></div><div className="service-detail-item service-detail-description"><span>توضیحات</span><strong>{selectedService.description || "توضیحی برای این سرویس ثبت نشده است."}</strong></div><div className="service-detail-item"><span>لینک سرویس</span><a href={selectedService.link} target="_blank" rel="noreferrer" dir="ltr">{selectedService.link}</a></div></div>
-        <div className="service-details-actions"><button className={`service-favorite-button ${selectedService.isFavorite ? "service-favorite-button-active" : ""}`} type="button" aria-pressed={selectedService.isFavorite} aria-label={selectedService.isFavorite ? "حذف از سرویس‌های مورد علاقه" : "افزودن به سرویس‌های مورد علاقه"} title={selectedService.isFavorite ? "حذف از علاقه‌مندی‌ها" : "افزودن به علاقه‌مندی‌ها"} disabled={isTogglingFavorite} onClick={() => void toggleFavorite()}><Heart size={16} fill={selectedService.isFavorite ? "currentColor" : "none"} /> {selectedService.isFavorite ? "مورد علاقه" : "افزودن به علاقه‌مندی‌ها"}</button><button className="modal-submit service-details-edit" type="button" onClick={() => openEditServiceModal(selectedService)}><Pencil size={15} /> ویرایش سرویس</button><button className="modal-danger service-details-delete" type="button" onClick={openDeleteServiceModal}><Trash2 size={15} /> حذف سرویس</button><button className="modal-cancel" type="button" onClick={closeServiceDetails}>بستن</button><a className="modal-submit service-details-open" href={selectedService.link} target="_blank" rel="noreferrer">باز کردن سرویس <ArrowUpLeft size={15} /></a></div>
+        <div className="service-details-actions"><button className="modal-submit service-details-edit" type="button" onClick={() => openEditServiceModal(selectedService)}><Pencil size={15} /> ویرایش سرویس</button><button className="modal-danger service-details-delete" type="button" onClick={openDeleteServiceModal}><Trash2 size={15} /> حذف سرویس</button><button className="modal-cancel" type="button" onClick={closeServiceDetails}>بستن</button><a className="modal-submit service-details-open" href={selectedService.link} target="_blank" rel="noreferrer">باز کردن سرویس <ArrowUpLeft size={15} /></a></div>
       </section></div>}
 
       {serviceToDelete && <div className="modal-layer service-delete-confirm-layer" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) closeDeleteServiceModal(); }}><section className="confirm-modal service-modal glass-card" role="alertdialog" aria-modal="true" aria-labelledby="delete-service-title"><div className="confirm-icon"><Trash2 size={21} /></div><div className="modal-header"><div><span className="modal-eyebrow confirm-eyebrow">حذف سرویس</span><h2 id="delete-service-title">حذف «{serviceToDelete.title}»؟</h2><p>این سرویس برای همیشه از دسته‌بندی و داشبورد حذف خواهد شد. این عملیات قابل بازگشت نیست.</p></div><button className="modal-close" type="button" aria-label="بستن تأیید حذف سرویس" onClick={() => closeDeleteServiceModal()}>×</button></div>{saveError && <div className="form-error" role="alert">{saveError}</div>}<div className="modal-actions"><button className="modal-cancel" type="button" onClick={() => closeDeleteServiceModal()}>انصراف</button><button className="modal-danger" type="button" disabled={isDeletingService} onClick={() => void deleteService()}>{isDeletingService ? <><LoaderCircle className="loading-spinner" size={15} /> در حال حذف...</> : <><Trash2 size={15} /> حذف سرویس</>}</button></div></section></div>}

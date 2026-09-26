@@ -2727,36 +2727,6 @@ button { cursor: pointer; }
 
 .service-delete-confirm-layer { z-index: 30; }
 
-.service-favorite-button {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  gap: 6px;
-  min-height: 38px;
-  padding: 0 12px;
-  border: 1px solid rgba(var(--theme-interactive-rgb), 0.28);
-  border-radius: 10px;
-  color: var(--theme-interactive-strong);
-  background: rgba(var(--theme-interactive-rgb), 0.08);
-  font-size: 11px;
-  font-weight: 800;
-  transition: 150ms ease;
-}
-
-.service-favorite-button:hover,
-.service-favorite-button-active {
-  border-color: rgba(var(--theme-interactive-rgb), 0.56);
-  color: var(--theme-interactive-strong);
-  background: rgba(var(--theme-interactive-rgb), 0.16);
-}
-
-.service-favorite-button-active { color: #d97992; }
-
-.service-favorite-button:disabled {
-  cursor: wait;
-  opacity: 0.62;
-}
-
 /* Additional low-glare corporate themes. */
 .theme-forest {
   color: #dbece5;
@@ -2991,9 +2961,9 @@ button { cursor: pointer; }
 }
 
 .dashboard-shell .row-service-card .compact-service-icon {
-  width: 30px;
-  height: 30px;
-  border-radius: 8px;
+  width: 36px;
+  height: 36px;
+  border-radius: 9px;
   box-shadow: none;
 }
 
@@ -3062,6 +3032,22 @@ button { cursor: pointer; }
 
 .theme-sand .row-service-card:hover { background: #c5bcad; }
 
+/* Keep service logos/icons clean: no colored tile behind the visual. */
+.dashboard-shell .row-service-card .compact-service-icon,
+.dashboard-shell .row-service-card .compact-service-logo {
+  border: 0;
+  background: transparent;
+}
+
+.dashboard-shell .row-service-card .service-icon-image {
+  padding: 0;
+}
+
+.dashboard-shell .row-service-card .compact-service-icon > svg {
+  width: 21px;
+  height: 21px;
+}
+
 @media (max-width: 620px) {
   .dashboard-shell .row-service-card {
     min-height: 54px;
@@ -3069,13 +3055,128 @@ button { cursor: pointer; }
   }
 
   .dashboard-shell .row-service-card .compact-service-icon {
-    width: 28px;
-    height: 28px;
+    width: 32px;
+    height: 32px;
     border-radius: 8px;
+  }
+
+  .dashboard-shell .row-service-card .compact-service-icon > svg {
+    width: 19px;
+    height: 19px;
   }
 
   .dashboard-shell .service-row-list {
     grid-template-columns: repeat(auto-fill, minmax(82px, 96px));
     gap: 2px;
+  }
+}
+
+/* Compact discovery toolbar for large service catalogs. */
+.dashboard-shell .service-filters {
+  gap: 10px;
+  margin-bottom: 14px;
+  padding: 10px 12px;
+  border-radius: 11px;
+}
+
+.dashboard-shell .filter-toolbar {
+  gap: 8px;
+}
+
+.dashboard-shell .filter-search-wrap {
+  flex: 0 1 360px;
+  width: min(100%, 360px);
+}
+
+.dashboard-shell .filter-search {
+  min-height: 38px;
+  padding: 0 10px;
+  border-radius: 9px;
+}
+
+.dashboard-shell .sort-control {
+  grid-template-columns: auto 132px;
+  gap: 6px;
+}
+
+.dashboard-shell .sort-control select {
+  min-width: 132px;
+  height: 38px;
+  border-radius: 9px;
+}
+
+.dashboard-shell .category-filter {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding-top: 9px;
+}
+
+.dashboard-shell .category-filter-heading {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  white-space: nowrap;
+}
+
+.dashboard-shell .category-filter-heading .category-filter-label {
+  padding-top: 0;
+}
+
+.dashboard-shell .category-filter-heading small {
+  color: #71839a;
+  font-size: 9px;
+  font-weight: 700;
+}
+
+.dashboard-shell .category-chips {
+  display: flex;
+  min-width: 0;
+  flex-wrap: nowrap;
+  gap: 5px;
+  overflow-x: auto;
+  padding: 1px 1px 3px;
+  scrollbar-width: thin;
+}
+
+.dashboard-shell .category-chip {
+  min-height: 28px;
+  flex: 0 0 auto;
+  padding: 0 8px;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .dashboard-shell .service-filters {
+    padding: 9px;
+  }
+
+  .dashboard-shell .filter-toolbar {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .dashboard-shell .filter-search-wrap {
+    width: 100%;
+    flex-basis: auto;
+  }
+
+  .dashboard-shell .sort-control {
+    grid-template-columns: auto minmax(0, 1fr);
+  }
+
+  .dashboard-shell .sort-control select {
+    width: 100%;
+  }
+
+  .dashboard-shell .category-filter {
+    grid-template-columns: 1fr;
+    gap: 5px;
+  }
+
+  .dashboard-shell .category-filter-heading {
+    justify-content: space-between;
   }
 }
