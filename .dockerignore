@@ -1,0 +1,15 @@
+node_modules
+.next
+.git
+.gitignore
+.env
+.env.*
+*.log
+*.db
+coverage
+out
+build
+.agents
+.claude
+.cursor
+.devin

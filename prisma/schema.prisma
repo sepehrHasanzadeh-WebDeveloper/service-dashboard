@@ -14,6 +14,8 @@ model Company {
   id         String     @id @default(cuid())
   name       String     @unique
   subtitle   String?
+  link       String?
+  icon       String?
   categories Category[]
   services   Service[]
   createdAt  DateTime   @default(now())

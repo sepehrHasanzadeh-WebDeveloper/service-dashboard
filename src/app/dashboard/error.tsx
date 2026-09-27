@@ -8,7 +8,7 @@ export default function DashboardError({ error, reset }: { error: Error & { dige
   }, [error]);
 
   return (
-    <main className="dashboard-shell theme-dark min-h-screen" dir="rtl">
+    <main className="dashboard-shell min-h-screen" dir="rtl">
       <div className="dashboard-container">
         <section className="dashboard-empty glass-card" role="alert">
           <h2>بارگذاری داشبورد با خطا مواجه شد</h2>

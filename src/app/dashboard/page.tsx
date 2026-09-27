@@ -24,7 +24,6 @@ import {
   Plus,
   Search,
   Server,
-  Settings2,
   ShieldCheck,
   Sparkles,
   Trash2,
@@ -61,6 +60,8 @@ type Company = {
   id: string;
   name: string;
   subtitle?: string | null;
+  link?: string | null;
+  icon?: string | null;
   categories: ServiceCategory[];
 };
 
@@ -82,6 +83,8 @@ type ApiCompany = {
   id: string;
   name: string;
   subtitle?: string | null;
+  link?: string | null;
+  icon?: string | null;
   categories: Array<{
     id: string;
     title: string;
@@ -103,6 +106,7 @@ type ServiceForm = {
 type CompanyForm = {
   name: string;
   subtitle: string;
+  link: string;
 };
 
 type CategoryForm = {
@@ -121,18 +125,13 @@ type CategoryContextMenu = {
   y: number;
 };
 
-type ThemeName = "dark" | "light" | "orange" | "slate" | "forest" | "graphite" | "sand";
-type SortOption = "name" | "latest" | "custom";
+type ServiceContextMenu = {
+  service: Service;
+  x: number;
+  y: number;
+};
 
-const themeOptions: Array<{ id: ThemeName; label: string; background: string; accent: string }> = [
-  { id: "dark", label: "سرمه‌ای سازمانی", background: "#102238", accent: "#6e91b6" },
-  { id: "light", label: "روشن اداری", background: "#f2f5f8", accent: "#315f88" },
-  { id: "orange", label: "خاکستری و آبی", background: "#eef2f5", accent: "#4e718f" },
-  { id: "slate", label: "ذغالی رسمی", background: "#1b2733", accent: "#7a9bb8" },
-  { id: "forest", label: "سبز جنگلی سازمانی", background: "#102c27", accent: "#5eaa91" },
-  { id: "graphite", label: "گرافیتی خنثی", background: "#20262d", accent: "#9aabba" },
-  { id: "sand", label: "شن روشن اداری", background: "#f1eee8", accent: "#82735f" },
-];
+type SortOption = "name" | "latest" | "custom";
 
 const iconMap: Record<string, IconComponent> = {
   Activity,
@@ -171,7 +170,7 @@ const categoryIconMap: Record<string, IconComponent> = {
 };
 
 const emptyServiceForm: ServiceForm = { title: "", description: "", link: "", categoryId: "" };
-const emptyCompanyForm: CompanyForm = { name: "", subtitle: "" };
+const emptyCompanyForm: CompanyForm = { name: "", subtitle: "", link: "" };
 const emptyCategoryForm: CategoryForm = { title: "" };
 
 function normalizeCompanies(data: ApiCompany[]): Company[] {
@@ -204,6 +203,17 @@ function ServiceIconVisual({ service, className = "", size = 16 }: { service: Se
   );
 }
 
+function CompanyIconVisual({ company }: { company: Company }) {
+  const [failedImageUrl, setFailedImageUrl] = useState<string | null>(null);
+  const showImage = Boolean(company.icon) && company.icon !== failedImageUrl;
+
+  return (
+    <span className={`company-tab-mark ${showImage ? "company-tab-mark-image" : ""}`}>
+      {showImage ? <img className="company-tab-logo" src={company.icon ?? ""} alt="" onError={() => setFailedImageUrl(company.icon ?? null)} /> : company.name.slice(0, 1)}
+    </span>
+  );
+}
+
 async function readApiPayload(response: Response) {
   const payload = await response.json().catch(() => ({})) as { error?: string };
   if (!response.ok) throw new Error(payload.error || "درخواست با خطا مواجه شد.");
@@ -221,8 +231,6 @@ function sortServices(services: Service[], sortOption: SortOption) {
 }
 
 export default function DashboardPage() {
-  const [theme, setTheme] = useState<ThemeName>("dark");
-  const [themeMenuOpen, setThemeMenuOpen] = useState(false);
   const [companies, setCompanies] = useState<Company[]>([]);
   const [availableCategoryTitles, setAvailableCategoryTitles] = useState<string[]>([]);
   const [activeCompanyId, setActiveCompanyId] = useState("");
@@ -235,6 +243,7 @@ export default function DashboardPage() {
   const [isCategoryModalOpen, setIsCategoryModalOpen] = useState(false);
   const [editingCategoryId, setEditingCategoryId] = useState<string | null>(null);
   const [categoryContextMenu, setCategoryContextMenu] = useState<CategoryContextMenu | null>(null);
+  const [serviceContextMenu, setServiceContextMenu] = useState<ServiceContextMenu | null>(null);
   const [categoryToDelete, setCategoryToDelete] = useState<ServiceCategory | null>(null);
   const [isSaving, setIsSaving] = useState(false);
   const [isCompanySaving, setIsCompanySaving] = useState(false);
@@ -313,6 +322,7 @@ export default function DashboardPage() {
   function selectCompany(companyId: string) {
     setCompanyContextMenu(null);
     setCategoryContextMenu(null);
+    setServiceContextMenu(null);
     setActiveCompanyId(companyId);
     setSelectedCategory("all");
     setSearchQuery("");
@@ -336,6 +346,7 @@ export default function DashboardPage() {
   function handleCategoryContextMenu(event: MouseEvent<HTMLElement>, category: ServiceCategory) {
     event.preventDefault();
     setCompanyContextMenu(null);
+    setServiceContextMenu(null);
     const menuWidth = 190;
     const menuHeight = 126;
     setCategoryContextMenu({
@@ -345,7 +356,21 @@ export default function DashboardPage() {
     });
   }
 
+  function handleServiceContextMenu(event: MouseEvent<HTMLDivElement>, service: Service) {
+    event.preventDefault();
+    setCompanyContextMenu(null);
+    setCategoryContextMenu(null);
+    const menuWidth = 190;
+    const menuHeight = 126;
+    setServiceContextMenu({
+      service,
+      x: Math.max(8, Math.min(event.clientX, window.innerWidth - menuWidth - 8)),
+      y: Math.max(8, Math.min(event.clientY, window.innerHeight - menuHeight - 8)),
+    });
+  }
+
   function openServiceDetails(service: Service) {
+    setServiceContextMenu(null);
     setSelectedService(service);
     setSaveError("");
   }
@@ -355,9 +380,10 @@ export default function DashboardPage() {
     setServiceToDelete(null);
   }
 
-  function openDeleteServiceModal() {
-    if (!selectedService) return;
-    setServiceToDelete(selectedService);
+  function openDeleteServiceModal(service = selectedService) {
+    if (!service) return;
+    setServiceContextMenu(null);
+    setServiceToDelete(service);
     setSaveError("");
   }
 
@@ -520,6 +546,7 @@ export default function DashboardPage() {
   }
 
   function openEditServiceModal(service: Service) {
+    setServiceContextMenu(null);
     setSelectedService(null);
     setEditingServiceId(service.id);
     setServiceForm({ title: service.title, description: service.description, link: service.link, categoryId: service.categoryId });
@@ -580,7 +607,7 @@ export default function DashboardPage() {
     setCompanyContextMenu(null);
     setCategoryContextMenu(null);
     setEditingCompanyId(company.id);
-    setCompanyForm({ name: company.name, subtitle: company.subtitle ?? "" });
+    setCompanyForm({ name: company.name, subtitle: company.subtitle ?? "", link: company.link ?? "" });
     setSaveError("");
     setIsCompanyModalOpen(true);
   }
@@ -736,25 +763,21 @@ export default function DashboardPage() {
     }
   }
 
-  const selectedTheme = themeOptions.find((option) => option.id === theme) ?? themeOptions[0];
-
   return (
-    <main className={`dashboard-shell theme-${theme} min-h-screen`} dir="rtl">
+    <main className="dashboard-shell min-h-screen" dir="rtl">
       <div className="dashboard-container">
         <header className="dashboard-header">
           <div className="brand-lockup"><div className="brand-symbol" aria-hidden="true"><Sparkles size={19} strokeWidth={2} /></div><div><div className="brand-name">مرکز دسترسی شرکت</div><div className="brand-subtitle">داشبورد چندسازمانی سرویس‌ها</div></div></div>
 
-          <div className="header-actions">
-            <button className="theme-toggle" type="button" aria-label="انتخاب تم داشبورد" title="انتخاب تم" aria-expanded={themeMenuOpen} onClick={() => setThemeMenuOpen((open) => !open)}><span className="theme-swatch" aria-hidden="true" style={{ background: `linear-gradient(135deg, ${selectedTheme.background} 0 50%, ${selectedTheme.accent} 50% 100%)` }}><span /></span><Settings2 size={18} /></button>
-            {themeMenuOpen && <div className="theme-menu" role="menu" aria-label="تم‌های داشبورد"><span className="theme-menu-title">انتخاب تم</span>{themeOptions.map((option) => <button className={`theme-option ${theme === option.id ? "theme-option-active" : ""}`} key={option.id} type="button" role="menuitem" onClick={() => { setTheme(option.id); setThemeMenuOpen(false); }}><span className="theme-option-dot" style={{ background: `linear-gradient(135deg, ${option.background} 0 50%, ${option.accent} 50% 100%)` }} /><span>{option.label}</span></button>)}</div>}
-          </div>
         </header>
 
-        <nav className="company-switcher" aria-label="انتخاب شرکت"><span className="company-switcher-label">شرکت‌ها</span><div className="company-tabs">{companies.map((company) => <div className={`company-tab-wrapper ${activeCompany?.id === company.id ? "company-tab-wrapper-active" : ""}`} key={company.id}><button className={`company-tab ${activeCompany?.id === company.id ? "company-tab-active" : ""}`} type="button" aria-haspopup="menu" onClick={() => selectCompany(company.id)} onContextMenu={(event) => handleCompanyContextMenu(event, company)}><span className="company-tab-mark">{company.name.slice(0, 1)}</span><span><strong>{company.name}</strong><small>{company.subtitle || "شرکت سازمانی"}</small></span></button></div>)}<button className="company-tab company-tab-add" type="button" onClick={openAddCompanyModal}><Plus size={16} /><span><strong>افزودن شرکت</strong><small>ساخت فضای جدید</small></span></button><button className="company-tab company-tab-add category-tab-add" type="button" disabled={!activeCompany} onClick={openAddCategoryModal}><Plus size={16} /><span><strong>افزودن دسته‌بندی</strong><small>برای شرکت فعال</small></span></button></div></nav>
+        <nav className="company-switcher" aria-label="انتخاب شرکت"><span className="company-switcher-label">شرکت‌ها</span><div className="company-tabs">{companies.map((company) => <div className={`company-tab-wrapper ${activeCompany?.id === company.id ? "company-tab-wrapper-active" : ""}`} key={company.id}><button className={`company-tab ${activeCompany?.id === company.id ? "company-tab-active" : ""}`} type="button" aria-haspopup="menu" onClick={() => selectCompany(company.id)} onContextMenu={(event) => handleCompanyContextMenu(event, company)}><CompanyIconVisual company={company} /><span><strong>{company.name}</strong><small>{company.subtitle || "شرکت سازمانی"}</small></span></button></div>)}<button className="company-tab company-tab-add" type="button" onClick={openAddCompanyModal}><Plus size={16} /><span><strong>افزودن شرکت</strong><small>ساخت فضای جدید</small></span></button><button className="company-tab company-tab-add category-tab-add" type="button" disabled={!activeCompany} onClick={openAddCategoryModal}><Plus size={16} /><span><strong>افزودن دسته‌بندی</strong><small>برای شرکت فعال</small></span></button></div></nav>
 
         {companyContextMenu && <div className="company-context-menu-layer" role="presentation" onClick={() => setCompanyContextMenu(null)} onKeyDown={(event) => { if (event.key === "Escape") setCompanyContextMenu(null); }}><div className="company-context-menu" role="menu" aria-label={`عملیات شرکت ${companyContextMenu.company.name}`} style={{ left: companyContextMenu.x, top: companyContextMenu.y }} onClick={(event) => event.stopPropagation()}><span className="company-context-menu-title">{companyContextMenu.company.name}</span><button type="button" role="menuitem" onClick={() => openEditCompanyModal(companyContextMenu.company)}><Pencil size={15} /> ویرایش شرکت</button><button className="company-context-menu-danger" type="button" role="menuitem" onClick={() => openDeleteCompanyModal(companyContextMenu.company)}><Trash2 size={15} /> حذف شرکت</button></div></div>}
 
         {categoryContextMenu && <div className="company-context-menu-layer" role="presentation" onClick={() => setCategoryContextMenu(null)} onKeyDown={(event) => { if (event.key === "Escape") setCategoryContextMenu(null); }}><div className="company-context-menu" role="menu" aria-label={`عملیات دسته‌بندی ${categoryContextMenu.category.title}`} style={{ left: categoryContextMenu.x, top: categoryContextMenu.y }} onClick={(event) => event.stopPropagation()}><span className="company-context-menu-title">{categoryContextMenu.category.title}</span><button type="button" role="menuitem" onClick={() => openEditCategoryModal(categoryContextMenu.category)}><Pencil size={15} /> ویرایش دسته‌بندی</button><button className="company-context-menu-danger" type="button" role="menuitem" onClick={() => openDeleteCategoryModal(categoryContextMenu.category)}><Trash2 size={15} /> حذف دسته‌بندی</button></div></div>}
+
+        {serviceContextMenu && <div className="company-context-menu-layer" role="presentation" onClick={() => setServiceContextMenu(null)} onKeyDown={(event) => { if (event.key === "Escape") setServiceContextMenu(null); }}><div className="company-context-menu" role="menu" aria-label={`عملیات سرویس ${serviceContextMenu.service.title}`} style={{ left: serviceContextMenu.x, top: serviceContextMenu.y }} onClick={(event) => event.stopPropagation()}><span className="company-context-menu-title">{serviceContextMenu.service.title}</span><button type="button" role="menuitem" onClick={() => openEditServiceModal(serviceContextMenu.service)}><Pencil size={15} /> ویرایش سرویس</button><button className="company-context-menu-danger" type="button" role="menuitem" onClick={() => openDeleteServiceModal(serviceContextMenu.service)}><Trash2 size={15} /> حذف سرویس</button></div></div>}
 
         {loadError && <div className="dashboard-alert dashboard-alert-error" role="alert"><span>{loadError}</span><button type="button" onClick={() => void loadDashboard()}>تلاش دوباره</button></div>}
         {reorderError && <div className="dashboard-alert dashboard-alert-error" role="alert"><span>{reorderError}</span><button type="button" onClick={() => setReorderError("")}>بستن</button></div>}
@@ -766,12 +789,15 @@ export default function DashboardPage() {
                 <label className="filter-search" aria-label="جست‌وجو بین سرویس‌ها"><Search size={16} /><input value={searchQuery} onChange={(event) => setSearchQuery(event.target.value)} placeholder="جست‌وجوی سرویس‌ها..." type="search" /></label>
                 {searchQuery.trim() && <div className="search-results filter-search-results" role="listbox" aria-label="نتایج جست‌وجو"><div className="search-results-heading">نتایج جست‌وجو <span>{searchResults.length}</span></div>{searchResults.length > 0 ? searchResults.slice(0, 8).map((service) => <button className="search-result" type="button" key={service.id} onClick={() => { setSelectedCategory(service.categoryId); setSearchQuery(""); }}><ServiceIconVisual service={service} className="search-result-icon" size={15} /><span className="search-result-copy"><strong>{service.title}</strong><small>{service.categoryTitle} · {service.description || "بدون توضیحات"}</small></span><ArrowUpLeft size={14} /></button>) : <p className="search-empty">سرویسی با این عبارت پیدا نشد.</p>}</div>}
               </div>
-              <label className="sort-control"><span>مرتب‌سازی</span><select value={sortOption} onChange={(event) => setSortOption(event.target.value as SortOption)}><option value="custom">ترتیب سفارشی</option><option value="name">نام A-Z</option><option value="latest">جدیدترین</option></select></label>
+              <div className="toolbar-actions">
+                <label className="sort-control"><span>مرتب‌سازی</span><select value={sortOption} onChange={(event) => setSortOption(event.target.value as SortOption)}><option value="custom">ترتیب سفارشی</option><option value="name">نام A-Z</option><option value="latest">جدیدترین</option></select></label>
+                <button className="section-action service-add-action" type="button" onClick={openAddServiceModal}><Plus size={16} /> افزودن سرویس</button>
+              </div>
             </div>
             <div className="category-filter"><div className="category-filter-heading"><span className="category-filter-label">دسته‌بندی‌ها</span><small>{displayedCategories.length} دسته</small></div><div className="category-chips" role="list">{categoryOptions.map((category) => <button className={`category-chip ${selectedCategory === category.id ? "category-chip-active" : ""}`} key={category.id} type="button" onClick={() => { setSelectedCategory(category.id); setSearchQuery(""); }} onContextMenu={(event) => { const sourceCategory = displayedCategories.find((item) => item.id === category.id); if (sourceCategory) handleCategoryContextMenu(event, sourceCategory); }}><span>{category.title}</span><b>{category.count}</b></button>)}</div></div>
             <p className="reorder-hint" aria-live="polite">{canReorder ? "برای تغییر ترتیب، کارت‌ها را داخل هر دسته جابه‌جا کنید." : "برای مرتب‌سازی دستی، جست‌وجو و فیلتر دسته‌بندی را پاک کنید و «ترتیب سفارشی» را انتخاب کنید."}</p>
           </section>
-          <div className="section-heading"><div><h2 id="services-title">سرویس‌های {activeCompany.name}</h2><span>{visibleServiceCount === serviceCount ? `${serviceCount} سرویس فعال` : `${visibleServiceCount} از ${serviceCount} سرویس نمایش داده می‌شود`} · {activeCompany.subtitle || "فضای مدیریت سرویس‌های شرکت"}</span></div><button className="section-action" type="button" onClick={openAddServiceModal}>افزودن سرویس <Plus size={15} /></button></div>
+          <div className="section-heading"><div><h2 id="services-title">سرویس‌های {activeCompany.name}</h2><span>{visibleServiceCount === serviceCount ? `${serviceCount} سرویس فعال` : `${visibleServiceCount} از ${serviceCount} سرویس نمایش داده می‌شود`} · {activeCompany.subtitle || "فضای مدیریت سرویس‌های شرکت"}</span></div></div>
           {serviceCount === 0 ? (
             <div className="dashboard-empty dashboard-empty-small glass-card">
               <span className="empty-icon"><LayoutGrid size={22} /></span>
@@ -802,7 +828,7 @@ export default function DashboardPage() {
                     <div className="service-row-list">
                       {visibleServices.map((service) => {
                         return (
-                          <div className={`row-service-card ${draggedServiceId === service.id ? "row-service-card-dragging" : ""} ${dropTargetServiceId === service.id ? "row-service-card-drop-target" : ""}`} key={service.id} draggable={canReorder} role="button" tabIndex={0} aria-label={`نمایش اطلاعات ${service.title}`} onClick={() => openServiceDetails(service)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openServiceDetails(service); } }} onDragStart={(event) => handleServiceDragStart(event, service, category.id)} onDragOver={(event) => handleServiceDragOver(event, service.id, category.id)} onDrop={(event) => void handleServiceDrop(event, service.id, category.id)} onDragEnd={clearDragState}>
+                          <div className={`row-service-card ${draggedServiceId === service.id ? "row-service-card-dragging" : ""} ${dropTargetServiceId === service.id ? "row-service-card-drop-target" : ""}`} key={service.id} draggable={canReorder} role="button" tabIndex={0} aria-label={`نمایش اطلاعات ${service.title}`} onClick={() => openServiceDetails(service)} onContextMenu={(event) => handleServiceContextMenu(event, service)} onKeyDown={(event) => { if (event.key === "Enter" || event.key === " ") { event.preventDefault(); openServiceDetails(service); } }} onDragStart={(event) => handleServiceDragStart(event, service, category.id)} onDragOver={(event) => handleServiceDragOver(event, service.id, category.id)} onDrop={(event) => void handleServiceDrop(event, service.id, category.id)} onDragEnd={clearDragState}>
                             <div className="row-service-main">
                               <ServiceIconVisual service={service} />
                               <span className="row-service-copy"><span className="row-service-name">{service.title}</span></span>
@@ -840,14 +866,14 @@ export default function DashboardPage() {
         <div className="service-details-header"><div className="service-details-identity"><ServiceIconVisual service={selectedService} className="service-details-icon" size={22} /><div><span className="modal-eyebrow">اطلاعات سرویس</span><h2 id="service-details-title">{selectedService.title}</h2>{selectedService.name && selectedService.name !== selectedService.title && <p>{selectedService.name}</p>}</div></div><button className="modal-close" type="button" aria-label="بستن اطلاعات سرویس" onClick={closeServiceDetails}>×</button></div>
         {saveError && <div className="form-error" role="alert">{saveError}</div>}
         <div className="service-details-content"><div className="service-detail-item"><span>دسته‌بندی</span><strong>{selectedService.categoryTitle}</strong></div><div className="service-detail-item service-detail-description"><span>توضیحات</span><strong>{selectedService.description || "توضیحی برای این سرویس ثبت نشده است."}</strong></div><div className="service-detail-item"><span>لینک سرویس</span><a href={selectedService.link} target="_blank" rel="noreferrer" dir="ltr">{selectedService.link}</a></div></div>
-        <div className="service-details-actions"><button className="modal-submit service-details-edit" type="button" onClick={() => openEditServiceModal(selectedService)}><Pencil size={15} /> ویرایش سرویس</button><button className="modal-danger service-details-delete" type="button" onClick={openDeleteServiceModal}><Trash2 size={15} /> حذف سرویس</button><button className="modal-cancel" type="button" onClick={closeServiceDetails}>بستن</button><a className="modal-submit service-details-open" href={selectedService.link} target="_blank" rel="noreferrer">باز کردن سرویس <ArrowUpLeft size={15} /></a></div>
+        <div className="service-details-actions"><button className="modal-submit service-details-edit" type="button" onClick={() => openEditServiceModal(selectedService)}><Pencil size={15} /> ویرایش سرویس</button><button className="modal-danger service-details-delete" type="button" onClick={() => openDeleteServiceModal()}><Trash2 size={15} /> حذف سرویس</button><button className="modal-cancel" type="button" onClick={closeServiceDetails}>بستن</button><a className="modal-submit service-details-open" href={selectedService.link} target="_blank" rel="noreferrer">باز کردن سرویس <ArrowUpLeft size={15} /></a></div>
       </section></div>}
 
       {serviceToDelete && <div className="modal-layer service-delete-confirm-layer" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) closeDeleteServiceModal(); }}><section className="confirm-modal service-modal glass-card" role="alertdialog" aria-modal="true" aria-labelledby="delete-service-title"><div className="confirm-icon"><Trash2 size={21} /></div><div className="modal-header"><div><span className="modal-eyebrow confirm-eyebrow">حذف سرویس</span><h2 id="delete-service-title">حذف «{serviceToDelete.title}»؟</h2><p>این سرویس برای همیشه از دسته‌بندی و داشبورد حذف خواهد شد. این عملیات قابل بازگشت نیست.</p></div><button className="modal-close" type="button" aria-label="بستن تأیید حذف سرویس" onClick={() => closeDeleteServiceModal()}>×</button></div>{saveError && <div className="form-error" role="alert">{saveError}</div>}<div className="modal-actions"><button className="modal-cancel" type="button" onClick={() => closeDeleteServiceModal()}>انصراف</button><button className="modal-danger" type="button" disabled={isDeletingService} onClick={() => void deleteService()}>{isDeletingService ? <><LoaderCircle className="loading-spinner" size={15} /> در حال حذف...</> : <><Trash2 size={15} /> حذف سرویس</>}</button></div></section></div>}
 
       {categoryToDelete && <div className="modal-layer" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) closeDeleteCategoryModal(); }}><section className="confirm-modal service-modal glass-card" role="alertdialog" aria-modal="true" aria-labelledby="delete-category-title"><div className="confirm-icon"><Trash2 size={21} /></div><div className="modal-header"><div><span className="modal-eyebrow confirm-eyebrow">حذف دسته‌بندی</span><h2 id="delete-category-title">حذف «{categoryToDelete.title}»؟</h2><p>تمام {categoryToDelete.services.length} سرویس این دسته‌بندی هم حذف خواهند شد. این عملیات قابل بازگشت نیست.</p></div><button className="modal-close" type="button" aria-label="بستن تأیید حذف دسته‌بندی" onClick={() => closeDeleteCategoryModal()}>×</button></div>{saveError && <div className="form-error" role="alert">{saveError}</div>}<div className="modal-actions"><button className="modal-cancel" type="button" onClick={() => closeDeleteCategoryModal()}>انصراف</button><button className="modal-danger" type="button" disabled={isDeletingCategory} onClick={() => void deleteCategory()}>{isDeletingCategory ? <><LoaderCircle className="loading-spinner" size={15} /> در حال حذف...</> : <><Trash2 size={15} /> حذف دسته‌بندی</>}</button></div></section></div>}
 
-      {isCompanyModalOpen && <div className="modal-layer" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) closeCompanyModal(); }}><form className="service-modal glass-card" onSubmit={saveCompany}><div className="modal-header"><div><span className="modal-eyebrow">داشبورد چندسازمانی</span><h2>{editingCompanyId ? "ویرایش شرکت" : "افزودن شرکت"}</h2><p>{editingCompanyId ? "نام و اطلاعات شرکت را به‌روزرسانی کنید." : "یک فضای مستقل برای سرویس‌های شرکت بسازید."}</p></div><button className="modal-close" type="button" aria-label="بستن" onClick={() => closeCompanyModal()}>×</button></div>{saveError && <div className="form-error" role="alert">{saveError}</div>}<div className="form-fields"><label className="form-field"><span>نام شرکت <b>*</b></span><input autoFocus required value={companyForm.name} onChange={(event) => setCompanyForm({ ...companyForm, name: event.target.value })} placeholder="مثلاً: شرکت آهن آنلاین" /></label><label className="form-field"><span>توضیح کوتاه</span><input value={companyForm.subtitle} onChange={(event) => setCompanyForm({ ...companyForm, subtitle: event.target.value })} placeholder="مثلاً: فناوری اطلاعات و عملیات" /></label></div><div className="modal-actions"><button className="modal-cancel" type="button" onClick={() => closeCompanyModal()}>انصراف</button><button className="modal-submit" type="submit" disabled={isCompanySaving}>{isCompanySaving ? <><LoaderCircle className="loading-spinner" size={15} /> در حال ذخیره...</> : <>{editingCompanyId ? <Pencil size={15} /> : <Plus size={16} />} {editingCompanyId ? "ذخیره تغییرات" : "افزودن شرکت"}</>}</button></div></form></div>}
+      {isCompanyModalOpen && <div className="modal-layer" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) closeCompanyModal(); }}><form className="service-modal glass-card" onSubmit={saveCompany}><div className="modal-header"><div><span className="modal-eyebrow">داشبورد چندسازمانی</span><h2>{editingCompanyId ? "ویرایش شرکت" : "افزودن شرکت"}</h2><p>{editingCompanyId ? "نام و اطلاعات شرکت را به‌روزرسانی کنید." : "یک فضای مستقل برای سرویس‌های شرکت بسازید."}</p></div><button className="modal-close" type="button" aria-label="بستن" onClick={() => closeCompanyModal()}>×</button></div>{saveError && <div className="form-error" role="alert">{saveError}</div>}<div className="form-fields"><label className="form-field"><span>نام شرکت <b>*</b></span><input autoFocus required value={companyForm.name} onChange={(event) => setCompanyForm({ ...companyForm, name: event.target.value })} placeholder="مثلاً: شرکت آهن آنلاین" /></label><label className="form-field"><span>توضیح کوتاه</span><input value={companyForm.subtitle} onChange={(event) => setCompanyForm({ ...companyForm, subtitle: event.target.value })} placeholder="مثلاً: فناوری اطلاعات و عملیات" /></label><label className="form-field"><span>لینک شرکت <small>(اختیاری)</small></span><input type="url" dir="ltr" value={companyForm.link} onChange={(event) => setCompanyForm({ ...companyForm, link: event.target.value })} placeholder="https://company.ir" /></label></div><div className="modal-actions"><button className="modal-cancel" type="button" onClick={() => closeCompanyModal()}>انصراف</button><button className="modal-submit" type="submit" disabled={isCompanySaving}>{isCompanySaving ? <><LoaderCircle className="loading-spinner" size={15} /> در حال ذخیره...</> : <>{editingCompanyId ? <Pencil size={15} /> : <Plus size={16} />} {editingCompanyId ? "ذخیره تغییرات" : "افزودن شرکت"}</>}</button></div></form></div>}
 
       {companyToDelete && <div className="modal-layer" role="presentation" onClick={(event) => { if (event.target === event.currentTarget) closeDeleteCompanyModal(); }}><section className="confirm-modal service-modal glass-card" role="alertdialog" aria-modal="true" aria-labelledby="delete-company-title"><div className="confirm-icon"><Trash2 size={21} /></div><div className="modal-header"><div><span className="modal-eyebrow confirm-eyebrow">حذف شرکت</span><h2 id="delete-company-title">حذف {companyToDelete.name}؟</h2><p>تمام دسته‌بندی‌ها و سرویس‌های این شرکت نیز حذف خواهند شد. این عملیات قابل بازگشت نیست.</p></div><button className="modal-close" type="button" aria-label="بستن تأیید حذف" onClick={() => closeDeleteCompanyModal()}>×</button></div>{saveError && <div className="form-error" role="alert">{saveError}</div>}<div className="modal-actions"><button className="modal-cancel" type="button" onClick={() => closeDeleteCompanyModal()}>انصراف</button><button className="modal-danger" type="button" disabled={isDeletingCompany} onClick={() => void deleteCompany()}>{isDeletingCompany ? <><LoaderCircle className="loading-spinner" size={15} /> در حال حذف...</> : <><Trash2 size={15} /> حذف شرکت</>}</button></div></section></div>}
     </main>
