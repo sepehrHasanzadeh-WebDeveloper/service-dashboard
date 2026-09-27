@@ -11,6 +11,9 @@ services:
       NODE_ENV: production
       NEXT_TELEMETRY_DISABLED: "1"
       DATABASE_URL: file:/app/data/dev.db
+      DASHBOARD_USERNAME: ${DASHBOARD_USERNAME:?DASHBOARD_USERNAME is required}
+      DASHBOARD_PASSWORD: ${DASHBOARD_PASSWORD:?DASHBOARD_PASSWORD is required}
+      AUTH_SECRET: ${AUTH_SECRET:?AUTH_SECRET is required}
     volumes:
       - dashboard_data:/app/data
 

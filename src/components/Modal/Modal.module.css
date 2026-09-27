@@ -1,0 +1,474 @@
+.layer {
+  position: fixed;
+  z-index: 20;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: 20px;
+  background: rgba(11, 18, 32, 0.78);
+  backdrop-filter: blur(7px);
+}
+
+.deleteLayer {
+  z-index: 30;
+}
+
+.formModal,
+.detailsModal {
+  max-height: calc(100vh - 40px);
+  overflow-y: auto;
+  border: 1px solid #233554;
+  border-radius: 18px;
+  background: #111c2e;
+  box-shadow: 0 28px 70px rgba(0, 0, 0, 0.38);
+}
+
+.formModal {
+  width: min(100%, 470px);
+  padding: 22px;
+}
+
+.detailsModal {
+  width: min(100%, 520px);
+  padding: 22px;
+}
+
+.header,
+.detailsHeader {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 15px;
+  padding-bottom: 17px;
+  border-bottom: 1px solid rgba(168, 190, 225, 0.14);
+}
+
+.eyebrow {
+  display: block;
+  margin-bottom: 6px;
+  color: #60a5fa;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.header h2,
+.detailsHeader h2 {
+  overflow: hidden;
+  color: #f8fafc;
+  font-size: 20px;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.header p,
+.detailsHeader p {
+  margin-top: 6px;
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.closeButton {
+  display: grid;
+  width: 30px;
+  height: 30px;
+  flex: 0 0 auto;
+  place-items: center;
+  border: 1px solid #233554;
+  border-radius: 9px;
+  color: #94a3b8;
+  background: #16243a;
+  font-size: 22px;
+  line-height: 1;
+}
+
+.closeButton:hover {
+  border-color: #3b82f6;
+  color: #f8fafc;
+  background: #1d3d69;
+}
+
+.error {
+  margin-top: 16px;
+  padding: 10px 11px;
+  border: 1px solid rgba(240, 154, 181, 0.3);
+  border-radius: 9px;
+  color: #f0b1c6;
+  background: rgba(183, 65, 108, 0.1);
+  font-size: 10px;
+  line-height: 1.8;
+}
+
+.fields {
+  display: grid;
+  gap: 15px;
+  padding-top: 18px;
+}
+
+.field {
+  display: grid;
+  gap: 7px;
+}
+
+.field > span {
+  color: #f8fafc;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.field b {
+  color: #f09ab5;
+}
+
+.field input,
+.field textarea,
+.field select {
+  width: 100%;
+  border: 1px solid #233554;
+  border-radius: 10px;
+  outline: 0;
+  color: #f8fafc;
+  background: #0b1220;
+  font-size: 12px;
+  resize: vertical;
+  transition: 150ms ease;
+}
+
+.field input {
+  height: 40px;
+  padding: 0 11px;
+}
+
+.field textarea {
+  padding: 10px 11px;
+}
+
+.field input::placeholder,
+.field textarea::placeholder,
+.field small {
+  color: #94a3b8;
+}
+
+.field select {
+  height: 40px;
+  padding: 0 11px;
+  appearance: auto;
+}
+
+.field input:focus,
+.field textarea:focus,
+.field select:focus {
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.16);
+}
+
+.actions,
+.detailsActions {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 9px;
+  padding-top: 20px;
+}
+
+.detailsActionGroup {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+}
+
+.submit,
+.danger {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-height: 38px;
+  padding: 0 14px;
+  border-radius: 10px;
+  font-size: 11px;
+  font-weight: 800;
+}
+
+.submit {
+  border: 1px solid #3b82f6;
+  color: #f8fafc;
+  background: #3b82f6;
+  box-shadow: 0 8px 18px rgba(59, 130, 246, 0.24);
+  text-decoration: none;
+}
+
+.submit:hover {
+  background: #60a5fa;
+}
+
+.submit:disabled,
+.danger:disabled {
+  cursor: wait;
+  opacity: 0.6;
+}
+
+.spinner {
+  animation: spin 900ms linear infinite;
+}
+
+.detailsHeader {
+  align-items: flex-start;
+}
+
+.detailsIdentity {
+  display: flex;
+  align-items: center;
+  min-width: 0;
+  gap: 12px;
+}
+
+.detailsIcon {
+  display: grid;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 13px;
+}
+
+.detailsIcon :global(.compact-service-icon) {
+  width: 48px;
+  height: 48px;
+  border-radius: 13px;
+}
+
+.detailsHeader h2 {
+  font-size: 20px;
+}
+
+.detailsHeader p {
+  margin-top: 5px;
+}
+
+.detailsContent {
+  display: grid;
+  gap: 9px;
+  padding-top: 18px;
+}
+
+.detailItem {
+  display: grid;
+  gap: 6px;
+  padding: 11px 12px;
+  border: 1px solid rgba(168, 190, 225, 0.12);
+  border-radius: 10px;
+  background: #0b1220;
+}
+
+.detailItem > span {
+  color: #94a3b8;
+  font-size: 10px;
+  font-weight: 800;
+}
+
+.detailItem > strong,
+.detailItem > a {
+  overflow-wrap: anywhere;
+  color: #f8fafc;
+  font-size: 12px;
+  font-weight: 700;
+  line-height: 1.8;
+}
+
+.detailItem > a {
+  color: #60a5fa;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.detailItem > a:hover {
+  color: #f8fafc;
+}
+
+.detailDescription > strong {
+  font-weight: 500;
+}
+
+.detailsDelete {
+  width: 38px;
+  padding: 0;
+}
+
+.detailsEdit {
+  width: 38px;
+  padding: 0;
+}
+
+.detailsOpen {
+  text-decoration: none;
+}
+
+.confirmModal {
+  position: relative;
+}
+
+.confirmModal .header {
+  position: static;
+}
+
+.confirmModal .header > div {
+  width: 100%;
+  padding-left: 45px;
+}
+
+.confirmModal .closeButton {
+  position: absolute;
+  top: 22px;
+  left: 22px;
+}
+
+.confirmIcon {
+  display: grid;
+  width: 44px;
+  height: 44px;
+  margin-bottom: 13px;
+  place-items: center;
+  border: 1px solid rgba(240, 154, 181, 0.3);
+  border-radius: 13px;
+  color: #f0a9be;
+  background: rgba(183, 65, 108, 0.13);
+}
+
+.confirmModal .eyebrow {
+  color: #f0a9be;
+}
+
+.danger {
+  border: 1px solid rgba(240, 154, 181, 0.36);
+  color: #fff;
+  background: #a94768;
+  box-shadow: 0 8px 18px rgba(169, 71, 104, 0.22);
+}
+
+.danger:hover {
+  background: #bb5276;
+}
+
+@media (max-width: 620px) {
+  .detailsModal {
+    padding: 17px;
+    border-radius: 15px;
+  }
+
+  .detailsHeader h2 {
+    font-size: 17px;
+  }
+
+  .detailsActions {
+    flex-direction: column-reverse;
+  }
+
+  .detailsActions > * {
+    width: 100%;
+  }
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+:global([data-theme="light"]) .layer {
+  background: rgba(15, 23, 42, 0.28);
+}
+
+:global([data-theme="light"]) .formModal,
+:global([data-theme="light"]) .detailsModal {
+  border-color: #CBD5E1;
+  background: #FFFFFF;
+  box-shadow: 0 1px 2px rgba(15, 23, 42, 0.08);
+}
+
+:global([data-theme="light"]) .header,
+:global([data-theme="light"]) .detailsHeader {
+  border-bottom-color: #E2E8F0;
+}
+
+:global([data-theme="light"]) .header h2,
+:global([data-theme="light"]) .detailsHeader h2,
+:global([data-theme="light"]) .field > span {
+  color: #0B1220;
+}
+
+:global([data-theme="light"]) .header p,
+:global([data-theme="light"]) .detailsHeader p,
+:global([data-theme="light"]) .field input::placeholder,
+:global([data-theme="light"]) .field textarea::placeholder,
+:global([data-theme="light"]) .field small {
+  color: #64748B;
+}
+
+:global([data-theme="light"]) .closeButton {
+  border-color: #CBD5E1;
+  color: #64748B;
+  background: #F1F5F9;
+}
+
+:global([data-theme="light"]) .closeButton:hover {
+  border-color: #3B82F6;
+  color: #0B1220;
+  background: #DBEAFE;
+}
+
+:global([data-theme="light"]) .field input,
+:global([data-theme="light"]) .field textarea,
+:global([data-theme="light"]) .field select {
+  border-color: #CBD5E1;
+  color: #0B1220;
+  background: #F8FAFC;
+}
+
+:global([data-theme="light"]) .submit {
+  border-color: #2563EB;
+  color: #FFFFFF;
+  background: #2563EB;
+}
+
+:global([data-theme="light"]) .submit:hover {
+  background: #3B82F6;
+}
+
+:global([data-theme="light"]) .detailsIcon :global(.compact-service-icon) {
+  background: transparent;
+}
+
+:global([data-theme="light"]) .detailItem {
+  border-color: #E2E8F0;
+  background: #F8FAFC;
+}
+
+:global([data-theme="light"]) .detailItem > span {
+  color: #64748B;
+}
+
+:global([data-theme="light"]) .detailItem > strong {
+  color: #0B1220;
+}
+
+:global([data-theme="light"]) .detailItem > a {
+  color: #2563EB;
+}
+
+:global([data-theme="light"]) .detailItem > a:hover {
+  color: #1D4ED8;
+}
+
+:global([data-theme="light"]) .detailsDelete {
+  border-color: #F1B6C8;
+  color: #B4234D;
+  background: #FFF1F5;
+}
+
+:global([data-theme="light"]) .detailsDelete:hover {
+  border-color: #E8799A;
+  color: #FFFFFF;
+  background: #B4234D;
+}

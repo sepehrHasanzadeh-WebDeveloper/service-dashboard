@@ -1,5 +1,6 @@
 import { prisma } from "@/lib/prisma";
 import { resolveFaviconUrl } from "@/lib/favicon";
+import { normalizeServiceUrl } from "@/lib/service-url";
 
 export const runtime = "nodejs";
 
@@ -20,23 +21,18 @@ function stringValue(value: unknown) {
 
 function validateServicePayload(body: ServicePayload) {
   const title = stringValue(body.title);
-  const link = stringValue(body.link);
+  const rawLink = stringValue(body.link);
+  const link = normalizeServiceUrl(rawLink);
   const companyId = stringValue(body.companyId);
   const categoryId = stringValue(body.categoryId);
   const categoryTitle = stringValue(body.categoryTitle);
 
   if (!title) return { error: "عنوان سرویس الزامی است." };
-  if (!link) return { error: "لینک سرویس الزامی است." };
+  if (!rawLink) return { error: "آدرس سرویس الزامی است." };
+  if (!link) return { error: "آدرس سرویس معتبر نیست. دامنه یا IP را همراه با پورت وارد کنید." };
   if (!companyId) return { error: "شرکت سرویس مشخص نشده است." };
   if (!categoryId && !categoryTitle) return { error: "دسته‌بندی سرویس الزامی است." };
   if (title.length > 120 || link.length > 2000) return { error: "طول عنوان یا لینک بیشتر از حد مجاز است." };
-
-  try {
-    const parsedLink = new URL(link);
-    if (!parsedLink.protocol.startsWith("http")) throw new Error("invalid protocol");
-  } catch {
-    return { error: "لینک سرویس معتبر نیست." };
-  }
 
   return {
     data: {

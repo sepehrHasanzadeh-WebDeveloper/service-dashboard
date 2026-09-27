@@ -1,36 +1,120 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# داشبورد مدیریت سرویس‌ها
 
-## Getting Started
+یک داشبورد داخلی برای مدیریت شرکت‌ها، دسته‌بندی‌ها و سرویس‌های هر شرکت. این پروژه با Next.js، React، Prisma و SQLite ساخته شده و احراز هویت داخلی با نشست امضاشده‌ی هفت‌ساعته دارد.
 
-First, run the development server:
+## پیش‌نیازها
 
-```bash
-npm run dev
-# or
-yarn dev
-# or
+- Node.js نسخه‌ی ۲۰ یا بالاتر
+- Corepack فعال و pnpm نسخه‌ی `12.6.0`
+- برای اجرای کانتینری: Docker و Docker Compose
+
+مدیر بسته‌ی پروژه فقط `pnpm` است. فایل `pnpm-lock.yaml` باید همراه سورس در مخزن نگه‌داری شود.
+
+## اجرای محلی
+
+در PowerShell:
+
+```powershell
+corepack enable
+corepack install --global pnpm@12.6.0
+pnpm install
+Copy-Item .env.example .env
+pnpm exec prisma migrate deploy
 pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+سپس داشبورد را در [http://localhost:3000](http://localhost:3000) باز کنید.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+برای ورود، مقدارهای `DASHBOARD_USERNAME` و `DASHBOARD_PASSWORD` را در فایل `.env` تنظیم کنید. فایل `.env` محرمانه است و نباید commit شود.
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+## اجرای production بدون Docker
 
-## Learn More
+```powershell
+pnpm install --frozen-lockfile
+pnpm exec prisma migrate deploy
+pnpm build
+pnpm start
+```
 
-To learn more about Next.js, take a look at the following resources:
+پورت پیش‌فرض production برابر `3000` است.
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+## اجرای Docker
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+Dockerfile از pnpm نسخه‌ی `12.6.0` با Corepack استفاده می‌کند و نصب وابستگی‌ها را با lockfile قفل‌شده انجام می‌دهد.
 
-## Deploy on Vercel
+ابتدا فایل تنظیمات محیطی را بسازید:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```powershell
+Copy-Item .env.example .env
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+سپس تصویر را بسازید و سرویس را اجرا کنید:
+
+```powershell
+docker compose up -d --build
+```
+
+دستورهای کاربردی:
+
+```powershell
+docker compose ps
+docker compose logs -f dashboard
+docker compose restart dashboard
+docker compose down
+```
+
+برنامه در [http://localhost:3000](http://localhost:3000) در دسترس است. دیتابیس SQLite داخل volume با نام `dashboard_data` نگه‌داری می‌شود؛ بنابراین با `docker compose down` حذف نمی‌شود. برای حذف volume و اطلاعات دیتابیس باید صراحتاً از `docker compose down -v` استفاده کنید.
+
+## متغیرهای محیطی
+
+| متغیر | توضیح |
+| --- | --- |
+| `DASHBOARD_USERNAME` | نام کاربری ورود به داشبورد |
+| `DASHBOARD_PASSWORD` | رمز عبور ورود به داشبورد |
+| `AUTH_SECRET` | کلید طولانی و تصادفی برای امضای نشست‌ها |
+| `DATABASE_URL` | آدرس دیتابیس Prisma؛ در Compose روی `file:/app/data/dev.db` تنظیم می‌شود |
+
+نشست ورود پس از ۷ ساعت منقضی می‌شود. برای محیط واقعی، رمز عبور و `AUTH_SECRET` را از مقادیر نمونه تغییر دهید.
+
+## اسکریپت‌ها و بررسی کیفیت
+
+```powershell
+pnpm dev                    # اجرای محیط توسعه
+pnpm build                  # ساخت production
+pnpm start                  # اجرای نسخه‌ی production
+pnpm lint                   # بررسی ESLint
+pnpm exec tsc --noEmit      # بررسی TypeScript
+pnpm exec prisma generate   # تولید Prisma Client
+pnpm exec prisma migrate deploy
+pnpm db:seed                # اجرای seed در صورت نیاز
+```
+
+قبل از push این بررسی‌ها را اجرا کنید:
+
+```powershell
+pnpm install --frozen-lockfile
+pnpm lint
+pnpm exec tsc --noEmit
+pnpm build
+docker compose build
+```
+
+## ساختار پروژه
+
+```text
+src/
+├─ app/                 # routeها، صفحه‌ها و APIهای Next.js
+├─ components/          # کامپوننت‌های مستقل با CSS Module کنار خودشان
+├─ context/             # state سراسری داشبورد
+└─ lib/                 # منطق احراز هویت و ابزارهای مشترک
+prisma/                 # schema، migration و seed دیتابیس
+Dockerfile              # ساخت image production با pnpm
+docker-compose.yml      # اجرای production همراه volume دیتابیس
+```
+
+## آماده‌سازی برای push
+
+- `package-lock.json` و سایر فایل‌های lock مربوط به مدیران بسته‌ی دیگر در پروژه وجود ندارند.
+- `pnpm-lock.yaml` و `pnpm-workspace.yaml` باید commit شوند.
+- `.env`، دیتابیس محلی، `node_modules`، `.next` و خروجی build در `.gitignore` قرار دارند.
+- قبل از انتشار، مقدارهای واقعی و محرمانه را فقط در محیط deployment تنظیم کنید و در مخزن قرار ندهید.

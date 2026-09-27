@@ -1,0 +1,101 @@
+.wrapper {
+  position: relative;
+  display: flex;
+  flex: 0 0 auto;
+  align-items: stretch;
+}
+
+.card {
+  display: flex;
+  flex: 0 0 auto;
+  align-items: center;
+  gap: 8px;
+  min-width: 220px;
+  padding: 8px 11px;
+  border: 1px solid #233554;
+  border-radius: 11px;
+  color: #f8fafc;
+  background: #16243a;
+  text-align: right;
+  transition: 160ms ease;
+}
+
+.card:hover,
+.cardActive {
+  border-color: #3b82f6;
+  color: #f8fafc;
+  background: #1d3d69;
+}
+
+.mark {
+  display: grid;
+  width: 29px;
+  height: 29px;
+  flex: 0 0 auto;
+  place-items: center;
+  border-radius: 8px;
+  color: #60a5fa;
+  background: #111c2e;
+  font-size: 14px;
+  font-weight: 900;
+}
+
+.markImage {
+  background: transparent;
+}
+
+.logo {
+  display: block;
+  width: 29px;
+  height: 29px;
+  object-fit: contain;
+}
+
+.copy {
+  display: grid;
+  gap: 3px;
+}
+
+.copy strong {
+  color: inherit;
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.copy small {
+  overflow: hidden;
+  max-width: 125px;
+  color: #94a3b8;
+  font-size: 8px;
+  font-weight: 500;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 620px) {
+  .card {
+    min-width: 205px;
+  }
+}
+
+:global([data-theme="light"]) .card {
+  border-color: #CBD5E1;
+  color: #0B1220;
+  background: #FFFFFF;
+}
+
+:global([data-theme="light"]) .card:hover,
+:global([data-theme="light"]) .cardActive {
+  border-color: #3B82F6;
+  color: #0B1220;
+  background: #EFF6FF;
+}
+
+:global([data-theme="light"]) .mark {
+  color: #2563EB;
+  background: #EFF6FF;
+}
+
+:global([data-theme="light"]) .copy small {
+  color: #64748B;
+}

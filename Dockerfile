@@ -1,30 +1,37 @@
-FROM node:20-alpine AS dependencies
+FROM node:20-alpine AS base
+
+RUN corepack enable \
+  && corepack install --global pnpm@12.6.0
 
 WORKDIR /app
 
-COPY package.json package-lock.json ./
-RUN npm ci
+FROM base AS dependencies
 
-FROM node:20-alpine AS builder
+ENV DATABASE_URL=file:/app/data/dev.db
 
-WORKDIR /app
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY prisma ./prisma
+COPY prisma.config.ts ./
+RUN pnpm install --frozen-lockfile
+
+FROM base AS builder
+
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=file:/app/data/dev.db
 
 COPY --from=dependencies /app/node_modules ./node_modules
-COPY package.json package-lock.json ./
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
 COPY prisma ./prisma
 COPY prisma.config.ts next.config.ts tsconfig.json postcss.config.mjs ./
 COPY eslint.config.mjs ./
 COPY src ./src
 COPY public ./public
 
-RUN npx prisma generate
-RUN npm run build
+RUN ./node_modules/.bin/prisma generate
+RUN ./node_modules/.bin/next build
 
-FROM node:20-alpine AS runner
+FROM base AS runner
 
-WORKDIR /app
 ENV NODE_ENV=production
 ENV NEXT_TELEMETRY_DISABLED=1
 ENV DATABASE_URL=file:/app/data/dev.db
@@ -39,4 +46,4 @@ RUN mkdir -p /app/data \
 USER nextjs
 EXPOSE 3000
 
-CMD ["sh", "-c", "npx prisma migrate deploy && npm run start"]
+CMD ["sh", "-c", "./node_modules/.bin/prisma migrate deploy && ./node_modules/.bin/next start"]

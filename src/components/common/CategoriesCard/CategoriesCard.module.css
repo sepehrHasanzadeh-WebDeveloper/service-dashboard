@@ -1,0 +1,74 @@
+.card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 6px;
+  min-width: 0;
+  min-height: 40px;
+  width: fit-content;
+  max-width: 100%;
+  flex: 0 1 auto;
+  padding: 6px 12px;
+  border: 1px solid #233554;
+  border-radius: 8px;
+  color: #f8fafc;
+  background: #111c2e;
+  font-size: 13px;
+  font-weight: 800;
+  line-height: 1.5;
+  text-align: right;
+  overflow-wrap: anywhere;
+  transition: 150ms ease;
+}
+
+.card b {
+  display: grid;
+  width: 26px;
+  min-width: 26px;
+  height: 26px;
+  flex: 0 0 26px;
+  padding: 0;
+  place-items: center;
+  align-self: center;
+  border-radius: 999px;
+  color: #60a5fa;
+  background: #16243a;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.card:hover,
+.cardActive {
+  border-color: #3b82f6;
+  color: #f8fafc;
+  background: #16243a;
+}
+
+.cardActive b {
+  color: #f8fafc;
+  background: #1d3d69;
+}
+
+:global([data-theme="light"]) .card {
+  border-color: #CBD5E1;
+  color: #0B1220;
+  background: #FFFFFF;
+}
+
+:global([data-theme="light"]) .card b {
+  color: #2563EB;
+  background: #EFF6FF;
+}
+
+:global([data-theme="light"]) .card:hover,
+:global([data-theme="light"]) .cardActive {
+  border-color: #3B82F6;
+  color: #0B1220;
+  background: #EFF6FF;
+}
+
+:global([data-theme="light"]) .cardActive b {
+  color: #FFFFFF;
+  background: #3B82F6;
+}

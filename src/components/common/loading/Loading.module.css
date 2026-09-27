@@ -1,0 +1,40 @@
+.loading {
+  display: grid;
+  justify-items: center;
+  gap: 9px;
+  margin-top: 31px;
+  padding: 64px 24px;
+  border-radius: 16px;
+  color: #94a3b8;
+  text-align: center;
+}
+
+.loading strong {
+  color: #f8fafc;
+  font-size: 16px;
+  font-weight: 900;
+}
+
+.loading span {
+  color: #94a3b8;
+  font-size: 11px;
+}
+
+.spinner {
+  animation: spin 900ms linear infinite;
+}
+
+@keyframes spin {
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+:global([data-theme="light"]) .loading,
+:global([data-theme="light"]) .loading span {
+  color: #64748B;
+}
+
+:global([data-theme="light"]) .loading strong {
+  color: #0B1220;
+}
